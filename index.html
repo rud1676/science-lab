@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Science Lab — 만져보는 과학</title>
+    <meta name="description" content="물리와 수학을 브라우저에서 직접 만져보는 인터랙티브 실험실. 만유인력 태양계부터 시작합니다." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="logo" href="/">Science<span>Lab</span></a>
+    </header>
+
+    <main class="home">
+      <section class="hero">
+        <h1>읽는 과학 말고,<br /><em>만져보는 과학.</em></h1>
+        <p>공식 하나를 코드로 옮기면 우주가 움직입니다. 슬라이더를 밀고, 행성을 던지고, 법칙이 맞는지 직접 확인해 보세요.</p>
+      </section>
+
+      <section class="grid">
+        <a class="card" href="/experiments/solar-system/">
+          <div class="card-art" aria-hidden="true">
+            <svg viewBox="0 0 200 120">
+              <circle cx="100" cy="60" r="44" fill="none" stroke="#2a3150" />
+              <circle cx="100" cy="60" r="26" fill="none" stroke="#2a3150" />
+              <circle cx="100" cy="60" r="9" fill="#ffd35c" />
+              <circle cx="126" cy="60" r="4" fill="#5aa9ff" />
+              <circle cx="69" cy="30" r="6" fill="#d9a066" />
+            </svg>
+          </div>
+          <div class="card-body">
+            <span class="tag">역학</span>
+            <h2>만유인력 태양계</h2>
+            <p>F = Gm₁m₂/r². G를 바꾸고, 행성을 던지고, 케플러 제3법칙을 직접 측정해요.</p>
+          </div>
+        </a>
+
+        <div class="card soon">
+          <div class="card-body">
+            <span class="tag">카오스</span>
+            <h2>이중 진자</h2>
+            <p>시작 각도 0.001° 차이가 어떻게 완전히 다른 운명이 되는지.</p>
+            <span class="soon-label">준비 중</span>
+          </div>
+        </div>
+
+        <div class="card soon">
+          <div class="card-body">
+            <span class="tag">수학</span>
+            <h2>푸리에 에피사이클</h2>
+            <p>원을 돌리는 원을 돌리는 원으로 어떤 그림이든 그리기.</p>
+            <span class="soon-label">준비 중</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/home.ts"></script>
+  </body>
+</html>

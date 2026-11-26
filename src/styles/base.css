@@ -1,0 +1,85 @@
+:root {
+  --bg: #070912;
+  --bg-elev: #0f1324;
+  --bg-elev-2: #161b31;
+  --line: #242a45;
+  --text: #e7e9f3;
+  --text-dim: #9097b3;
+  --accent: #7aa2ff;
+  --accent-2: #ffd35c;
+  --good: #5fd39a;
+  --warn: #ffb057;
+  --bad: #ff6b6b;
+  --radius: 12px;
+  --font: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR',
+    'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+code,
+.mono {
+  font-family: var(--mono);
+  font-size: 0.92em;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.site-header .logo {
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.site-header .logo span {
+  color: var(--accent-2);
+}
+
+button,
+.btn {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+button:hover,
+.btn:hover {
+  border-color: var(--accent);
+}
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0a0d1a;
+  font-weight: 600;
+}

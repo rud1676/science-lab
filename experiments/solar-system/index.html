@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>만유인력 태양계 — Science Lab</title>
+    <meta name="description" content="뉴턴의 만유인력 법칙으로 움직이는 태양계 시뮬레이션. 중력 상수를 바꾸고, 행성을 던지고, 케플러 제3법칙을 직접 측정해 보세요." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="logo" href="/">Science<span>Lab</span></a>
+      <span class="crumb">역학 · 만유인력 태양계</span>
+    </header>
+
+    <main class="lab">
+      <section class="stage">
+        <canvas id="sim" aria-label="태양계 시뮬레이션"></canvas>
+        <div class="hint" id="hint">행성을 끌어서 던져 보세요 🪐</div>
+        <div class="toast" id="toast" role="status"></div>
+        <div class="zoom">
+          <button id="zoom-in" aria-label="확대">+</button>
+          <button id="zoom-out" aria-label="축소">−</button>
+          <button id="zoom-fit" aria-label="전체 보기">⤢</button>
+        </div>
+        <div class="hud mono" id="hud"></div>
+      </section>
+
+      <aside class="panel">
+        <div class="row buttons">
+          <button id="play" class="primary">일시정지</button>
+          <button id="reset">초기화</button>
+        </div>
+
+        <label class="control">
+          <span>중력 상수 <b id="g-label" class="mono">G × 1.00</b></span>
+          <input id="g" type="range" min="0.25" max="3" step="0.05" value="1" />
+        </label>
+
+        <label class="control">
+          <span>시간 속도 <b id="speed-label" class="mono">1초 = 0.20년</b></span>
+          <input id="speed" type="range" min="-2" max="3.3" step="0.05" value="0" />
+        </label>
+
+        <fieldset class="control">
+          <legend>적분법</legend>
+          <label><input type="radio" name="integrator" value="verlet" checked /> Velocity Verlet</label>
+          <label><input type="radio" name="integrator" value="euler" /> 오일러 (Euler)</label>
+        </fieldset>
+
+        <label class="check"><input id="trails" type="checkbox" checked /> 궤적 표시</label>
+
+        <div class="energy">
+          <span>총 에너지 오차</span>
+          <b id="energy" class="mono">0.0000%</b>
+        </div>
+
+        <h3>케플러 제3법칙 측정</h3>
+        <canvas id="kepler" class="kepler-chart" aria-label="T² 대 a³ 로그 그래프"></canvas>
+        <table class="kepler-table mono">
+          <thead>
+            <tr><th>천체</th><th>a (AU)</th><th>T (년)</th><th>T²/a³</th></tr>
+          </thead>
+          <tbody id="kepler-body"></tbody>
+        </table>
+        <p class="note">이론값 <code>T²/a³ = 4π²/(GM)</code> = <b id="kepler-theory" class="mono">1.000</b></p>
+      </aside>
+
+      <article class="explain">
+        <h2>무슨 일이 일어나고 있나</h2>
+
+        <h3>1. 모든 것은 한 줄의 공식에서</h3>
+        <p>
+          두 물체는 질량의 곱에 비례하고 거리의 제곱에 반비례하는 힘으로 서로를 끌어당깁니다.
+        </p>
+        <p class="formula">F = G · m₁ · m₂ / r²</p>
+        <p>
+          화면 속 모든 천체는 매 순간 다른 모든 천체로부터 이 힘을 받습니다. 태양만 행성을 당기는 게 아니라
+          행성도 태양을 당기고, 목성은 지구를 살짝 흔듭니다. 이 시뮬레이션은 그걸 전부 계산합니다(N체 문제).
+        </p>
+
+        <h3>2. 지구가 1년에 한 바퀴 돌도록 단위를 고르기</h3>
+        <p>
+          거리는 <b>AU</b>(지구–태양 거리), 시간은 <b>년</b>, 질량은 <b>태양질량</b>을 씁니다.
+          이 단위계에서는 중력 상수가 <code>G = 4π² ≈ 39.48</code>이 됩니다. 원궤도에서 중력이 구심력 역할을 하므로
+        </p>
+        <p class="formula">G·M·m / r² = m·v² / r,&nbsp;&nbsp; v = 2πr / T &nbsp;⟹&nbsp; T² = (4π² / GM) · r³</p>
+        <p>
+          r = 1 AU, M = 1 태양질량일 때 T = 1년이 나오려면 G = 4π²이어야 하죠. 이 마지막 식이 바로
+          <b>케플러 제3법칙</b>입니다. 측정 패널의 그래프에서 모든 행성이 기울기 1인 한 직선 위에 놓이는지 확인해 보세요.
+        </p>
+
+        <h3>3. 컴퓨터는 움직임을 어떻게 계산할까</h3>
+        <p>
+          컴퓨터는 연속적인 시간을 다룰 수 없어서, 아주 짧은 시간(여기서는 약 4.4시간)씩 끊어서 위치와 속도를 갱신합니다.
+          이 "끊는 방법"을 <b>적분법</b>이라고 합니다.
+        </p>
+        <ul>
+          <li>
+            <b>오일러</b>: "지금 속도로 dt만큼 가고, 지금 가속도로 속도를 바꾼다." 가장 직관적이지만, 매 스텝 오차가
+            한쪽으로 쌓여서 궤도가 조금씩 바깥으로 풀립니다. 에너지가 새는 거죠.
+          </li>
+          <li>
+            <b>Velocity Verlet</b>: 위치를 먼저 옮긴 뒤 <em>옛 가속도와 새 가속도의 평균</em>으로 속도를 갱신합니다.
+            계산량은 거의 같은데, 오차가 쌓이지 않고 출렁이기만 해서 수천 바퀴를 돌아도 궤도가 유지됩니다.
+          </li>
+        </ul>
+        <p>적분법을 오일러로 바꾸고 수성을 지켜보면서, 패널의 에너지 오차가 어떻게 커지는지 보세요.</p>
+
+        <h3>해볼 만한 실험</h3>
+        <ul>
+          <li><b>탈출 속도</b>: 지구를 공전 방향으로 원래 속도의 √2배(≈1.41배) 넘게 던지면 다시 돌아오지 않습니다.</li>
+          <li><b>G를 2배로</b>: 궤도가 찌그러지고, 그래프의 직선이 아래로 내려갑니다. T²/a³ = 1/2이 되거든요.</li>
+          <li><b>태양으로 던지기</b>: 행성을 태양 쪽으로 세게 던지면 빨려 들어갑니다. 운동량은 태양이 이어받아요.</li>
+          <li><b>오일러 + 빠른 시간</b>: 수성이 나선을 그리며 바깥으로 도망가는 걸 볼 수 있어요.</li>
+        </ul>
+      </article>
+    </main>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
