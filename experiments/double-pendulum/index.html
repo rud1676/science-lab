@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>이중 진자와 카오스 — Science Lab</title>
+    <meta name="description" content="시작 각도 0.001° 차이가 어떻게 완전히 다른 운명이 될까? 이중 진자로 카오스와 예측 가능 시간을 직접 측정해 보세요." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="logo" href="../../">Science<span>Lab</span></a>
+      <span class="crumb">카오스 · 이중 진자</span>
+    </header>
+
+    <main class="lab">
+      <section class="stage">
+        <canvas id="sim" aria-label="이중 진자 시뮬레이션"></canvas>
+        <div class="hint" id="hint">추를 끌어서 시작 각도를 정해 보세요</div>
+        <div class="hud mono" id="hud"></div>
+      </section>
+
+      <aside class="panel">
+        <div class="row buttons">
+          <button id="play" class="primary">일시정지</button>
+          <button id="reset">처음부터</button>
+        </div>
+
+        <div class="control">
+          <span>시작 자세</span>
+          <div class="presets" id="presets">
+            <button data-t1="10" data-t2="10">작은 각도 10°</button>
+            <button data-t1="120" data-t2="-20" class="active">큰 각도 120°</button>
+            <button data-t1="179" data-t2="179">거의 거꾸로</button>
+          </div>
+        </div>
+
+        <label class="control">
+          <span>진자 개수 <b id="count-label" class="mono">10개</b></span>
+          <input id="count" type="range" min="0" max="4" step="1" value="2" />
+        </label>
+
+        <label class="control">
+          <span>이웃 진자와의 각도 차이 <b id="delta-label" class="mono">0.001°</b></span>
+          <input id="delta" type="range" min="-7" max="0" step="1" value="-3" />
+        </label>
+
+        <label class="control">
+          <span>중력 가속도 g <b id="g-label" class="mono">9.81 m/s²</b></span>
+          <input id="g" type="range" min="1" max="25" step="0.01" value="9.81" />
+        </label>
+
+        <label class="control">
+          <span>시간 속도 <b id="speed-label" class="mono">× 1.00</b></span>
+          <input id="speed" type="range" min="0.1" max="1.5" step="0.05" value="1" />
+        </label>
+
+        <label class="check"><input id="trails" type="checkbox" checked /> 궤적 표시</label>
+
+        <div class="stat">
+          <span>예측 가능 시간</span>
+          <b id="horizon" class="mono">측정 중…</b>
+        </div>
+        <div class="stat">
+          <span>에너지 오차 (RK4)</span>
+          <b id="energy" class="mono">0%</b>
+        </div>
+
+        <h3>첫 진자와 마지막 진자의 차이</h3>
+        <canvas id="chart" class="chart" aria-label="두 진자의 각도 차이 로그 그래프"></canvas>
+        <p class="note">세로축은 로그 눈금. 직선으로 올라가면 <b>지수적으로</b> 벌어지는 중이라는 뜻이에요.</p>
+      </aside>
+
+      <article class="explain">
+        <h2>무슨 일이 일어나고 있나</h2>
+
+        <h3>1. 진자 하나는 얌전하다</h3>
+        <p>길이 L인 진자의 각도 θ는 다음 방정식을 따릅니다.</p>
+        <p class="formula">θ'' = −(g / L) · sin θ</p>
+        <p>
+          각도가 작으면 sin θ ≈ θ 이므로 <code>θ'' = −(g/L)·θ</code>, 즉 용수철처럼 일정한 주기
+          <code>T = 2π√(L/g)</code>로 흔들립니다. 언제 어디에 있을지 정확히 예측할 수 있죠.
+        </p>
+
+        <h3>2. 두 개를 이으면 방정식이 사나워진다</h3>
+        <p>
+          두 번째 진자는 첫 번째 진자 끝에 매달려 있어서, 서로가 서로를 잡아당기고 밀어냅니다. 이럴 때는 힘을 직접
+          따지는 것보다 <b>에너지</b>로 접근하는 게 편합니다. 운동에너지 T와 위치에너지 V를 쓰고,
+        </p>
+        <p class="formula">
+          T = ½(m₁+m₂)L₁²ω₁² + ½m₂L₂²ω₂² + m₂L₁L₂ω₁ω₂cos(θ₁−θ₂)<br />
+          V = −(m₁+m₂)gL₁cos θ₁ − m₂gL₂cos θ₂
+        </p>
+        <p>
+          라그랑지안 <code>ℒ = T − V</code>에 오일러–라그랑주 방정식 <code>d/dt(∂ℒ/∂ω) = ∂ℒ/∂θ</code>을 적용하면
+          두 각가속도 θ₁'', θ₂''이 나옵니다. 식은 길지만(아래 코드 참고) 핵심은 하나예요:
+          <b>θ₁''이 θ₂와 ω₂에, θ₂''이 θ₁과 ω₁에 얽혀 있다</b>는 것. 이 얽힘이 카오스의 씨앗입니다.
+        </p>
+
+        <h3>3. 결정론적인데 예측할 수 없다</h3>
+        <p>
+          이 시뮬레이션에는 무작위성이 전혀 없습니다. 같은 시작 → 항상 같은 결과. 그런데 시작 각도가
+          <b>0.001°</b>만 달라도, 몇 초 뒤엔 완전히 다른 곳에 있습니다. 이것이 <b>카오스</b>입니다.
+        </p>
+        <p>패널의 그래프에서 두 진자의 차이 Δ는 대략 이렇게 자랍니다.</p>
+        <p class="formula">Δ(t) ≈ Δ₀ · e^(λt)&nbsp;&nbsp;&nbsp;(λ: 리아푸노프 지수)</p>
+        <p>
+          로그 눈금에서 직선으로 보이는 이유가 이것입니다. 직선의 기울기가 λ예요. 그러면 차이가 허용치 ε(여기선 0.1
+          rad)에 닿는 <b>예측 가능 시간</b>은
+        </p>
+        <p class="formula">t* ≈ (1/λ) · ln(ε / Δ₀)</p>
+        <p>
+          여기서 놀라운 결론이 나옵니다. 초기 오차 Δ₀를 <b>1000배</b> 줄여도 예측 가능 시간은 1000배가 아니라
+          <code>ln(1000)/λ ≈ 6.9/λ</code>만큼만 늘어납니다. 일기예보가 2주를 넘기기 어려운 이유도 같은 원리예요.
+        </p>
+
+        <h3>4. 왜 룽게–쿠타(RK4)를 쓰나</h3>
+        <p>
+          태양계에서는 Velocity Verlet을 썼지만, 이중 진자의 가속도는 각속도 ω에도 의존해서(ω² 항) 기본 Verlet을 그대로
+          쓸 수 없습니다. RK4는 한 스텝 안에서 기울기를 네 번(시작, 중간 두 번, 끝) 재서 가중 평균합니다. 오차가 dt⁴에
+          비례해서, dt = 1ms면 20초 동안 에너지 오차가 0.01%도 안 됩니다. 패널의 에너지 오차로 직접 확인해 보세요.
+        </p>
+
+        <h3>공식 → 코드</h3>
+        <p>위의 운동방정식은 코드에서 이렇게 생겼습니다. <code>den</code>은 두 식에 공통으로 들어가는 분모예요.</p>
+        <pre><code><span class="c">// src/physics/pendulum.ts</span>
+const d = s.t1 - s.t2;
+const den = 2*m1 + m2 - m2*Math.cos(2*d);
+
+<span class="c">// θ₁'' : 중력 + 두 번째 진자가 끌어당기는 효과</span>
+const a1 = (-g*(2*m1+m2)*Math.sin(s.t1)
+            - m2*g*Math.sin(s.t1 - 2*s.t2)
+            - 2*Math.sin(d)*m2*(s.w2**2*L2 + s.w1**2*L1*Math.cos(d))) / (L1*den);
+
+<span class="c">// θ₂'' : 첫 번째 진자의 원운동이 휘두르는 효과</span>
+const a2 = (2*Math.sin(d)*(s.w1**2*L1*(m1+m2)
+            + g*(m1+m2)*Math.cos(s.t1)
+            + s.w2**2*L2*m2*Math.cos(d))) / (L2*den);
+
+<span class="c">// RK4: 기울기를 네 번 재서 1:2:2:1 로 평균</span>
+const k1 = f(s), k2 = f(s + k1·dt/2), k3 = f(s + k2·dt/2), k4 = f(s + k3·dt);
+next = s + (k1 + 2k2 + 2k3 + k4)/6 · dt;</code></pre>
+
+        <h3>해볼 만한 실험</h3>
+        <ul>
+          <li><b>작은 각도 10°</b> + 진자 200개: 아무리 기다려도 한 덩어리로 움직입니다. 카오스는 큰 각도에서만 나타나요.</li>
+          <li><b>예측 가능 시간 vs 초기 차이</b>: 각도 차이를 10⁻³° → 10⁻⁶°로 1000배 줄이고 예측 가능 시간이 얼마나 늘어나는지 재보세요. 몇 배가 아니라 <em>몇 초</em> 늘어납니다.</li>
+          <li><b>g를 바꾸면</b>: 달(1.62)에서는 모든 게 느려지지만 카오스는 그대로입니다. 예측 가능 "시간"은 길어질까요?</li>
+          <li><b>거의 거꾸로</b>: 불안정한 꼭대기에서 출발하면 순식간에 흩어집니다.</li>
+        </ul>
+
+        <p class="more">다른 실험: <a href="../solar-system/">만유인력 태양계</a> · <a href="../fourier/">푸리에 에피사이클</a></p>
+      </article>
+    </main>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

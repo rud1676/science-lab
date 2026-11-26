@@ -3,15 +3,15 @@ import { fileURLToPath } from 'node:url';
 
 const root = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
-// 실험 하나 = experiments/<slug>/index.html. 새 실험을 추가하면 여기에도 등록한다.
+// 실험 하나 = experiments/<slug>/index.html. 실험은 이 3개로 고정한다(CLAUDE.md 참고).
 export default defineConfig({
-  // Netlify(루트 도메인)는 '/', GitHub Pages(https://rud1676.github.io/science-lab/)는 하위 경로
-  base: process.env.NETLIFY ? '/' : '/science-lab/',
   build: {
     rollupOptions: {
       input: {
         main: root('./index.html'),
         'solar-system': root('./experiments/solar-system/index.html'),
+        'double-pendulum': root('./experiments/double-pendulum/index.html'),
+        fourier: root('./experiments/fourier/index.html'),
       },
     },
   },

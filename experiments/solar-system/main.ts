@@ -1,5 +1,5 @@
 import '../../src/styles/base.css';
-import './style.css';
+import '../../src/styles/lab.css';
 import {
   G0, absorbIntoSun, createSolarSystem, escapeSpeed, semiMajorAxis, setGravity, step, totalEnergy,
   type Body, type Integrator, type Sim,

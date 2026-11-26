@@ -107,6 +107,27 @@
         </ul>
         <p>적분법을 오일러로 바꾸고 수성을 지켜보면서, 패널의 에너지 오차가 어떻게 커지는지 보세요.</p>
 
+        <h3>공식 → 코드</h3>
+        <p>
+          <code>F = Gm₁m₂/r²</code>를 질량으로 나누면 가속도 <code>a = Gm/r²</code>가 되고, 방향은 상대 위치 벡터
+          (dx, dy)를 r로 나눈 단위 벡터입니다. 둘을 곱하면 <code>G·m·dx / r³</code>. 작용·반작용이라 한 쌍을 한 번만
+          계산해서 양쪽에 반대 부호로 더합니다.
+        </p>
+        <pre><code><span class="c">// src/physics/nbody.ts — 모든 쌍 (i, j)에 대해</span>
+const dx = b.x - a.x, dy = b.y - a.y;
+const r2 = dx*dx + dy*dy + eps*eps;     <span class="c">// eps: r→0 에서 무한대 방지</span>
+const invR3 = 1 / (r2 * Math.sqrt(r2)); <span class="c">// 1/r³</span>
+a.ax += G * b.mass * dx * invR3;        <span class="c">// a가 b 쪽으로 끌림</span>
+b.ax -= G * a.mass * dx * invR3;        <span class="c">// b는 반대로 (뉴턴 제3법칙)</span>
+
+<span class="c">// Velocity Verlet 한 스텝</span>
+x += v*dt + ½·a_old·dt²;   <span class="c">// 1) 위치 이동</span>
+a_new = 가속도(x);          <span class="c">// 2) 새 위치에서 힘 계산</span>
+v += ½(a_old + a_new)·dt;  <span class="c">// 3) 두 가속도의 평균으로 속도 갱신</span>
+
+<span class="c">// 오일러는 1~3을 이렇게 뭉뚱그린다 → 에너지가 샌다</span>
+x += v*dt;  v += a_old*dt;</code></pre>
+
         <h3>해볼 만한 실험</h3>
         <ul>
           <li><b>탈출 속도</b>: 지구를 공전 방향으로 원래 속도의 √2배(≈1.41배) 넘게 던지면 다시 돌아오지 않습니다.</li>
@@ -114,6 +135,8 @@
           <li><b>태양으로 던지기</b>: 행성을 태양 쪽으로 세게 던지면 빨려 들어갑니다. 운동량은 태양이 이어받아요.</li>
           <li><b>오일러 + 빠른 시간</b>: 수성이 나선을 그리며 바깥으로 도망가는 걸 볼 수 있어요.</li>
         </ul>
+
+        <p class="more">다른 실험: <a href="../double-pendulum/">이중 진자와 카오스</a> · <a href="../fourier/">푸리에 에피사이클</a></p>
       </article>
     </main>
 

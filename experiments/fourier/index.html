@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>푸리에 에피사이클 — Science Lab</title>
+    <meta name="description" content="돌아가는 원 위에 원, 그 위에 또 원. 푸리에 변환으로 어떤 그림이든 회전하는 화살표로 그려 보세요. 직접 그린 그림도 됩니다." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="logo" href="../../">Science<span>Lab</span></a>
+      <span class="crumb">수학 · 푸리에 에피사이클</span>
+    </header>
+
+    <main class="lab">
+      <section class="stage">
+        <canvas id="sim" aria-label="푸리에 에피사이클 그리기"></canvas>
+        <div class="hint hidden" id="hint">한 붓으로 그림을 그려 보세요 — 손을 떼면 시작해요</div>
+        <div class="hud mono" id="hud"></div>
+      </section>
+
+      <aside class="panel">
+        <div class="row buttons">
+          <button id="play" class="primary">일시정지</button>
+        </div>
+
+        <div class="control">
+          <span>그림</span>
+          <div class="presets" id="presets">
+            <button data-shape="heart" class="active">하트</button>
+            <button data-shape="star">별</button>
+            <button data-shape="square">사각형</button>
+            <button data-shape="draw">✏️ 직접 그리기</button>
+          </div>
+        </div>
+
+        <label class="control">
+          <span>화살표 개수 <b id="k-label" class="mono">256 / 256</b></span>
+          <input id="k" type="range" min="0" max="100" step="1" value="100" />
+        </label>
+
+        <label class="control">
+          <span>한 바퀴 시간 <b id="period-label" class="mono">8초</b></span>
+          <input id="period" type="range" min="2" max="30" step="1" value="8" />
+        </label>
+
+        <label class="check"><input id="circles" type="checkbox" checked /> 원 표시</label>
+        <label class="check"><input id="ghost" type="checkbox" checked /> 원래 그림 표시</label>
+
+        <div class="stat">
+          <span>담아낸 에너지 Σ|c<sub>k</sub>|²</span>
+          <b id="energy" class="mono">100%</b>
+        </div>
+        <div class="stat">
+          <span>원래 그림과의 오차 (RMS)</span>
+          <b id="error" class="mono">0%</b>
+        </div>
+
+        <h3>스펙트럼 |c<sub>k</sub>|</h3>
+        <canvas id="chart" class="chart" aria-label="푸리에 계수 크기 막대그래프"></canvas>
+        <p class="note">가로축은 회전 속도 k(바퀴/주기), 세로축은 로그 눈금. 밝은 막대가 지금 쓰고 있는 화살표예요.</p>
+      </aside>
+
+      <article class="explain">
+        <h2>무슨 일이 일어나고 있나</h2>
+
+        <h3>1. 돌아가는 화살표 하나 = e<sup>iθ</sup></h3>
+        <p>점 (x, y)를 복소수 <code>z = x + iy</code>로 쓰면, 오일러 공식</p>
+        <p class="formula">e^(iθ) = cos θ + i·sin θ</p>
+        <p>
+          은 원점에서 길이 1, 각도 θ인 화살표입니다. θ를 시간에 따라 늘리면 화살표가 빙글빙글 돌죠. 여기에 복소수
+          c를 곱하면 길이는 |c|, 시작 각도는 arg(c)만큼 돌아간 화살표가 됩니다.
+        </p>
+        <p class="formula">c_k · e^(2πikt)&nbsp;&nbsp;→&nbsp;&nbsp;길이 |c_k|, 한 주기에 k바퀴, 시작 각도 arg(c_k)</p>
+
+        <h3>2. 화살표를 이어 붙이면 그림이 된다</h3>
+        <p>화살표들을 꼬리에 머리를 잇듯 연결하면, 마지막 화살표 끝이 지나가는 자리가 곡선을 그립니다.</p>
+        <p class="formula">z(t) = Σ c_k · e^(2πikt)&nbsp;&nbsp;&nbsp;(t: 0 → 1)</p>
+        <p>
+          푸리에의 주장은 대담합니다: <b>적당한 c_k만 고르면 어떤 닫힌 곡선이든</b> 이렇게 그릴 수 있다. 화면 속 원들이
+          바로 이 화살표들이에요(k가 음수면 시계 방향으로 돕니다).
+        </p>
+
+        <h3>3. c_k는 어떻게 구하나 — 이산 푸리에 변환</h3>
+        <p>그림을 N개의 점 z₀, z₁, …, z_(N−1)으로 찍었다면,</p>
+        <p class="formula">c_k = (1/N) · Σₙ z_n · e^(−2πikn/N)</p>
+        <p>
+          직관은 이렇습니다. 그림 전체를 <b>반대 방향(−k)으로</b> 돌리면서 평균을 내면, 원래 k 속도로 돌던 성분만
+          멈춰서 남고 나머지는 빙글빙글 돌다 평균 0으로 상쇄됩니다. 회전하는 카메라로 같은 속도의 물체만 정지시켜
+          찍는 것과 같아요.
+        </p>
+
+        <h3>4. 왜 적은 원으로도 비슷해질까</h3>
+        <p>
+          스펙트럼을 보면 대부분의 크기가 작은 |k|에 몰려 있습니다. 매끄러운 그림일수록 더 그렇죠. 그리고
+          <b>파스발 정리</b>에 따르면 그림의 "에너지"는 계수들의 제곱합과 정확히 같습니다.
+        </p>
+        <p class="formula">(1/N) Σ |z_n|² = Σ |c_k|²</p>
+        <p>
+          그래서 큰 화살표부터 K개만 써도 에너지의 대부분을 담아낼 수 있습니다. 패널의 "담아낸 에너지"가 이 비율이에요.
+          하트는 화살표 10개로 이미 99% 이상입니다.
+        </p>
+
+        <h3>5. 사각형 모서리의 뿔 — 깁스 현상</h3>
+        <p>
+          사각형을 골라 화살표를 줄여 보세요. 모서리 근처에서 선이 살짝 튀어나옵니다. 화살표를 늘리면 튀어나온 부분이
+          좁아지긴 하지만 <b>높이는 줄지 않습니다</b>. 날카로운 꺾임을 매끄러운 원들로 흉내 내는 데서 오는 근본적인
+          한계로, 깁스 현상이라고 부릅니다.
+        </p>
+
+        <h3>공식 → 코드</h3>
+        <p>복소수 곱셈 <code>(x + iy)(cos + i·sin)</code>을 실수부와 허수부로 풀어 쓰면 끝입니다.</p>
+        <pre><code><span class="c">// src/math/fourier.ts — c_k = (1/N) Σ z_n · e^(−2πikn/N)</span>
+for (let n = 0; n &lt; N; n++) {
+  const angle = -2 * Math.PI * k * n / N;
+  const c = Math.cos(angle), s = Math.sin(angle);
+  re += x[n] * c - y[n] * s;   <span class="c">// 실수부</span>
+  im += x[n] * s + y[n] * c;   <span class="c">// 허수부</span>
+}
+re /= N; im /= N;
+amp = Math.hypot(re, im);      <span class="c">// 화살표 길이 |c_k|</span>
+phase = Math.atan2(im, re);    <span class="c">// 시작 각도 arg(c_k)</span>
+
+<span class="c">// 그리기 — z(t) = Σ c_k · e^(2πikt)</span>
+for (const term of terms) {
+  const a = 2 * Math.PI * term.k * t + term.phase;
+  x += term.amp * Math.cos(a);
+  y += term.amp * Math.sin(a);
+}</code></pre>
+
+        <h3>해볼 만한 실험</h3>
+        <ul>
+          <li><b>화살표 1개</b>: 어떤 그림이든 원 하나가 됩니다. 그 그림을 가장 잘 흉내 내는 원이죠.</li>
+          <li><b>2개, 3개, 5개…</b>: 몇 개째에 "아, 하트다!" 싶은지 찾아보세요. 그때의 에너지 비율도 같이 보세요.</li>
+          <li><b>사각형 + 화살표 30개</b>: 모서리의 뿔(깁스 현상)을 찾아보세요.</li>
+          <li><b>직접 그리기</b>: 이름 이니셜이나 고양이 얼굴을 그려 보세요. 뾰족한 그림일수록 스펙트럼이 넓게 퍼집니다.</li>
+        </ul>
+
+        <p class="more">다른 실험: <a href="../solar-system/">만유인력 태양계</a> · <a href="../double-pendulum/">이중 진자와 카오스</a></p>
+      </article>
+    </main>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
 
+# 배포는 Netlify가 한다(netlify.toml). 여기서는 PR·푸시마다 테스트와 빌드만 확인한다.
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -18,29 +19,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: 물리 테스트
+      - name: 물리·수학 테스트
         run: npm test
       - name: 타입체크 + 빌드
         run: npm run build
-      - uses: actions/upload-pages-artifact@v3
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        with:
-          path: dist
-
-  # 테스트·빌드가 통과한 main 푸시만 배포된다
-  deploy:
-    needs: check
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    concurrency:
-      group: pages
-      cancel-in-progress: false
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4

@@ -100,6 +100,7 @@
 
 .panel {
   grid-area: panel;
+  min-width: 0;
   background: var(--bg-elev);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -207,6 +208,7 @@ fieldset.control label {
 
 .explain {
   grid-area: explain;
+  min-width: 0; /* 긴 코드 블록이 그리드 칸을 밀어내지 않게 */
   max-width: 760px;
   padding: 24px 4px 60px;
 }
@@ -241,4 +243,54 @@ fieldset.control label {
   .stage {
     height: 62vh;
   }
+}
+
+/* ── 공용 컴포넌트 (여러 실험에서 사용) ───────────────── */
+.stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 8px 10px;
+  background: var(--bg-elev-2);
+  border-radius: 8px;
+}
+.stat b {
+  font-weight: 500;
+}
+.chart {
+  width: 100%;
+  aspect-ratio: 1.6;
+  background: var(--bg-elev-2);
+  border-radius: 8px;
+}
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.presets button {
+  font-size: 13px;
+  padding: 4px 10px;
+}
+.presets button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.explain pre {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.explain pre .c {
+  color: #6f7799;
+}
+.explain .more {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  color: var(--text-dim);
 }
