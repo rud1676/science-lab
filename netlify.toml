@@ -1,0 +1,7 @@
+[build]
+  # 물리 테스트가 실패하면 배포되지 않는다
+  command = "npm test && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "24"
